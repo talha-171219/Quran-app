@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#055160" />
+    <title>আল-কুরআন — Modern PWA</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="https://i.postimg.cc/KjRpQfZw/Whats-App-Image-2025-10-06-at-12-29-35-b34f48ab.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="app-container">
+
+        <!-- Home screen (surah list) -->
+        <div id="home-screen" class="screen active">
+            <header class="topbar">
+                <button id="open-menu" class="icon-btn">☰</button>
+                <h1 class="app-title">আল-কুরআন</h1>
+                <button id="resume-btn" class="icon-btn" title="Resume last read">⤴︎</button>
+            </header>
+
+            <section class="controls">
+                <input id="surah-search" type="search" placeholder="সূরা নাম/নম্বর/আরবি খুঁজুন..." aria-label="Surah search" />
+                <div class="controls-row">
+                    <a href="dua.html" id="open-dua-btn" class="btn primary">দোয়া</a>
+                    <button id="view-bookmarks-btn" class="btn primary">বুকমার্ক</button>
+                    <button id="open-settings-btn" class="btn primary">সেটিংস</button>
+                </div>
+            </section>
+
+            <main id="surah-list-container" class="list">
+                <div class="loading-message">ডেটা লোড হচ্ছে...</div>
+            </main>
+        </div>
+
+        <!-- Viewer screen -->
+        <div id="viewer-screen" class="screen">
+            <header class="topbar viewer-top">
+                <button id="back-to-home-btn" class="icon-btn">←</button>
+                <h2 id="viewer-surah-title">–</h2>
+                <div class="viewer-actions">
+                    <button id="share-surah" class="icon-btn" title="Share">⤴</button>
+                </div>
+            </header>
+
+            <main id="verses-container" class="verses"></main>
+        </div>
+
+        <!-- Bookmarks panel -->
+        <aside id="bookmarks-panel" class="panel">
+            <div class="panel-header">
+                <h3>Bookmarks</h3>
+                <button id="close-bookmarks" class="icon-btn">✕</button>
+            </div>
+            <div id="bookmarks-list" class="panel-body"></div>
+        </aside>
+
+        <!-- Settings panel -->
+        <aside id="settings-panel" class="panel">
+            <div class="panel-header">
+                <h3>Settings</h3>
+                <button id="close-settings" class="icon-btn">✕</button>
+            </div>
+            <div class="panel-body settings-body">
+                <label class="setting-row"><span>রাত/দিন (Dark mode)</span>
+                    <input id="toggle-dark" type="checkbox" /></label>
+                <label class="setting-row"><span>আরবি ফন্ট সাইজ</span>
+                    <input id="arabic-font-size" type="range" min="18" max="36" value="20" /></label>
+                <label class="setting-row"><span>বাংলা ফন্ট সাইজ</span>
+                    <input id="bengali-font-size" type="range" min="12" max="22" value="16" /></label>
+                <div class="setting-row">
+                    <button id="clear-data" class="btn danger">Clear local data</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- small toast -->
+        <div id="toast" class="toast" aria-live="polite"></div>
+
+    </div>
+
+    <script src="script.js" defer></script>
+    <script src="pwa.js" defer></script>
+</body>
+</html>
