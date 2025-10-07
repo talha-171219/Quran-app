@@ -24,10 +24,24 @@ function initAudioPanel(){
   });
 
   // delegated play: set src when user interacts to avoid preloading
+  // When a user starts playback: initialize src only once and pause any other playing audio
   container.addEventListener('play', (e)=>{
-    const a = e.target; if(a.tagName!=='AUDIO') return;
-    if(!a.src) a.src = a.dataset.src;
+    const a = e.target; if(!a || a.tagName !== 'AUDIO') return;
+    try{
+      // initialize src only on first interaction to avoid resetting currentTime on subsequent toggles
+      if(!a.dataset.initialized){
+        a.src = a.dataset.src || a.src;
+        a.dataset.initialized = '1';
+      }
+      // pause other audios so only one plays at a time (mobile-friendly)
+      document.querySelectorAll('audio').forEach(other=>{ if(other!==a && !other.paused){ try{ other.pause(); }catch(_){} } });
+    }catch(_){}
   }, true);
+
+  // Revoke Blob URLs (if any created elsewhere) when page unloads to free memory
+  window.addEventListener('beforeunload', ()=>{
+    try{ document.querySelectorAll('audio').forEach(a=>{ if(a && a._blobUrl){ try{ URL.revokeObjectURL(a._blobUrl); }catch(_){} a._blobUrl = null; } }); }catch(_){}
+  });
 }
 
 // open/close SPA panels
