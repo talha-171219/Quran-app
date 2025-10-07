@@ -5,18 +5,29 @@
     e.preventDefault();
     deferredPrompt = e;
     // show install UI if an element exists
-    const installBtns = document.querySelectorAll('[data-pwa-install]');
-    installBtns.forEach(b=>{ b.style.display='inline-block'; b.addEventListener('click', async ()=>{
-      if(!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      b.style.display='none';
-    })});
+    const installBtn = document.getElementById('pwa-install');
+    if(installBtn){
+      installBtn.style.display = 'inline-block';
+      installBtn.addEventListener('click', async ()=>{
+        if(!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+      });
+    }
   });
 
-  // register SW
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
-  }
+  // register SW after DOM is ready and use a relative path so it works on subpaths (GitHub Pages)
+  document.addEventListener('DOMContentLoaded', ()=>{
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('./sw.js').then(()=>{
+        console.log('Service worker registered');
+      }).catch(e=>{ console.warn('SW registration failed', e); });
+    }
+  });
+  // hide install button if app was already installed
+  window.addEventListener('appinstalled', ()=>{
+    try{ const b = document.getElementById('pwa-install'); if(b) b.style.display='none'; console.log('App installed'); }catch(_){}
+  });
 })();
