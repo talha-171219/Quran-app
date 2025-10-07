@@ -236,25 +236,71 @@
               if(timeLabel) timeLabel.textContent = `${fmt(audioEl.currentTime)} / ${fmt(audioEl.duration)}`;
             });
 
-            audioEl.addEventListener('ended', ()=>{ try{ if(playBtn) playBtn.textContent='▶'; }catch(_){} });
+            // Update button icon when playback state changes so UI stays in sync
+            audioEl.addEventListener('play', ()=>{
+              try{
+                // Pause any other audio elements so only one plays at a time (mobile-friendly)
+                document.querySelectorAll('audio').forEach(a=>{ if(a!==audioEl && !a.paused){ try{ a.pause(); }catch(_){} } });
+                if(playBtn){
+                  playBtn.textContent='\u23f8';
+                  playBtn.setAttribute('aria-pressed','true');
+                  playBtn.setAttribute('aria-label','Pause');
+                }
+              }catch(_){}
+            });
+            audioEl.addEventListener('pause', ()=>{
+              try{
+                if(playBtn){
+                  playBtn.textContent='\u25b6';
+                  playBtn.setAttribute('aria-pressed','false');
+                  playBtn.setAttribute('aria-label','Play');
+                }
+              }catch(_){}
+            });
+            audioEl.addEventListener('ended', ()=>{
+              try{
+                if(playBtn){
+                  playBtn.textContent='\u25b6';
+                  playBtn.setAttribute('aria-pressed','false');
+                  playBtn.setAttribute('aria-label','Play');
+                }
+              }catch(_){}
+            });
 
+            // Only set the audio src on first user interaction to avoid resetting currentTime
             playBtn && playBtn.addEventListener('click', async ()=>{
               try{
-                const CACHE_NAME = 'quran-app-audio-v3';
-                const cache = await caches.open(CACHE_NAME);
-                const cachedResp = await cache.match(audioUrl);
-                if(cachedResp){
-                  if(!audioEl._blobUrl){
-                    try{ const buf = await cachedResp.arrayBuffer(); const blob = new Blob([buf], { type: cachedResp.headers.get('Content-Type') || 'audio/mpeg' }); audioEl._blobUrl = URL.createObjectURL(blob); }catch(_){}
+                // If we've already initialized the src for this element, don't change it — that resets playback.
+                if(!audioEl.dataset.initialized){
+                  const CACHE_NAME = 'quran-app-audio-v3';
+                  const cache = await caches.open(CACHE_NAME);
+                  const cachedResp = await cache.match(audioUrl);
+                  if(cachedResp){
+                    if(!audioEl._blobUrl){
+                      try{
+                        const buf = await cachedResp.arrayBuffer();
+                        const blob = new Blob([buf], { type: cachedResp.headers.get('Content-Type') || 'audio/mpeg' });
+                        audioEl._blobUrl = URL.createObjectURL(blob);
+                      }catch(_){ }
+                    }
+                    if(audioEl._blobUrl) audioEl.src = audioEl._blobUrl;
+                    else audioEl.src = audioUrl;
+                  }else{
+                    audioEl.src = audioUrl;
                   }
-                  if(audioEl._blobUrl && audioEl.src !== audioEl._blobUrl) audioEl.src = audioEl._blobUrl;
-                }else{
-                  if(audioEl._blobUrl){ try{ URL.revokeObjectURL(audioEl._blobUrl); }catch(_){} audioEl._blobUrl = null; }
-                  if(audioEl.src !== audioUrl) audioEl.src = audioUrl;
+                  audioEl.dataset.initialized = '1';
                 }
-                if(audioEl.paused){ await audioEl.play().catch(()=>{}); if(playBtn) playBtn.textContent='⏸'; }
-                else{ audioEl.pause(); if(playBtn) playBtn.textContent='▶'; }
-              }catch(e){ if(audioEl.paused){ await audioEl.play().catch(()=>{}); if(playBtn) playBtn.textContent='⏸'; } else{ audioEl.pause(); if(playBtn) playBtn.textContent='▶'; } }
+
+                // Toggle playback without touching src so currentTime is preserved
+                if(audioEl.paused){
+                  await audioEl.play().catch(()=>{});
+                }else{
+                  audioEl.pause();
+                }
+              }catch(e){
+                // Fallback toggle if something goes wrong
+                if(audioEl.paused){ await audioEl.play().catch(()=>{}); } else { audioEl.pause(); }
+              }
             });
 
             const seekEl = card.querySelector('.seek');
@@ -344,6 +390,14 @@
           }
         });
       }
+    });
+    // Revoke any created blob URLs when page is unloaded to free memory (mobile/desktop)
+    window.addEventListener('beforeunload', ()=>{
+      try{
+        document.querySelectorAll('audio').forEach(a=>{
+          if(a && a._blobUrl){ try{ URL.revokeObjectURL(a._blobUrl); }catch(_){} a._blobUrl = null; }
+        });
+      }catch(_){}
     });
   </script>
 </body>
